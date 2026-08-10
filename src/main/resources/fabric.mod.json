@@ -1,14 +1,14 @@
 {
 "schemaVersion": 1,
-"id": "addon-template",
+"id": "QuinnAddom",
 "version": "${version}",
-"name": "Addon Template",
-"description": "An addon template for Meteor Client addons.",
+"name": "QuinnAddom",
+"description": "QuinnAddom",
 "authors": [
-"seasnail"
+""
 ],
 "contact": {
-"sources": "https://github.com/MeteorDevelopment/meteor-addon-template"
+"sources": "https://github.com/QuinnnMC/QuinnAddon"
 },
 "icon": "assets/template/icon.png",
 "environment": "client",
