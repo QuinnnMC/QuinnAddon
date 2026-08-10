@@ -1,0 +1,373 @@
+Compiled from "InstantRebreak.java"
+public class meteordevelopment.meteorclient.systems.modules.player.InstantRebreak extends meteordevelopment.meteorclient.systems.modules.Module {
+  private final meteordevelopment.meteorclient.settings.SettingGroup sgGeneral;
+
+  private final meteordevelopment.meteorclient.settings.SettingGroup sgRender;
+
+  private final meteordevelopment.meteorclient.settings.Setting<java.lang.Integer> tickDelay;
+
+  private final meteordevelopment.meteorclient.settings.Setting<java.lang.Boolean> pick;
+
+  private final meteordevelopment.meteorclient.settings.Setting<java.lang.Boolean> rotate;
+
+  private final meteordevelopment.meteorclient.settings.Setting<java.lang.Boolean> render;
+
+  private final meteordevelopment.meteorclient.settings.Setting<meteordevelopment.meteorclient.renderer.ShapeMode> shapeMode;
+
+  private final meteordevelopment.meteorclient.settings.Setting<meteordevelopment.meteorclient.utils.render.color.SettingColor> sideColor;
+
+  private final meteordevelopment.meteorclient.settings.Setting<meteordevelopment.meteorclient.utils.render.color.SettingColor> lineColor;
+
+  public final net.minecraft.class_2338$class_2339 blockPos;
+
+  private int ticks;
+
+  private net.minecraft.class_2350 direction;
+
+  public meteordevelopment.meteorclient.systems.modules.player.InstantRebreak();
+    Code:
+       0: aload_0
+       1: getstatic     #71                 // Field meteordevelopment/meteorclient/systems/modules/Categories.Player:Lmeteordevelopment/meteorclient/systems/modules/Category;
+       4: ldc           #73                 // String instant-rebreak
+       6: ldc           #75                 // String Instantly re-breaks blocks in the same position.
+       8: invokespecial #78                 // Method meteordevelopment/meteorclient/systems/modules/Module."<init>":(Lmeteordevelopment/meteorclient/systems/modules/Category;Ljava/lang/String;Ljava/lang/String;)V
+      11: aload_0
+      12: aload_0
+      13: getfield      #82                 // Field settings:Lmeteordevelopment/meteorclient/settings/Settings;
+      16: invokevirtual #88                 // Method meteordevelopment/meteorclient/settings/Settings.getDefaultGroup:()Lmeteordevelopment/meteorclient/settings/SettingGroup;
+      19: putfield      #90                 // Field sgGeneral:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+      22: aload_0
+      23: aload_0
+      24: getfield      #82                 // Field settings:Lmeteordevelopment/meteorclient/settings/Settings;
+      27: ldc           #92                 // String Render
+      29: invokevirtual #96                 // Method meteordevelopment/meteorclient/settings/Settings.createGroup:(Ljava/lang/String;)Lmeteordevelopment/meteorclient/settings/SettingGroup;
+      32: putfield      #98                 // Field sgRender:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+      35: aload_0
+      36: aload_0
+      37: getfield      #90                 // Field sgGeneral:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+      40: new           #7                  // class meteordevelopment/meteorclient/settings/IntSetting$Builder
+      43: dup
+      44: invokespecial #100                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder."<init>":()V
+      47: ldc           #102                // String delay
+      49: invokevirtual #106                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+      52: checkcast     #7                  // class meteordevelopment/meteorclient/settings/IntSetting$Builder
+      55: ldc           #108                // String The delay between break attempts.
+      57: invokevirtual #111                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+      60: checkcast     #7                  // class meteordevelopment/meteorclient/settings/IntSetting$Builder
+      63: iconst_0
+      64: invokestatic  #117                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      67: invokevirtual #121                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder.defaultValue:(Ljava/lang/Object;)Ljava/lang/Object;
+      70: checkcast     #7                  // class meteordevelopment/meteorclient/settings/IntSetting$Builder
+      73: iconst_0
+      74: invokevirtual #125                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder.min:(I)Lmeteordevelopment/meteorclient/settings/IntSetting$Builder;
+      77: bipush        20
+      79: invokevirtual #128                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder.sliderMax:(I)Lmeteordevelopment/meteorclient/settings/IntSetting$Builder;
+      82: invokevirtual #132                // Method meteordevelopment/meteorclient/settings/IntSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/IntSetting;
+      85: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+      88: putfield      #140                // Field tickDelay:Lmeteordevelopment/meteorclient/settings/Setting;
+      91: aload_0
+      92: aload_0
+      93: getfield      #90                 // Field sgGeneral:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+      96: new           #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+      99: dup
+     100: invokespecial #141                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder."<init>":()V
+     103: ldc           #143                // String only-pick
+     105: invokevirtual #144                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+     108: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     111: ldc           #146                // String Only tries to mine the block if you are holding a pickaxe.
+     113: invokevirtual #147                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+     116: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     119: iconst_1
+     120: invokestatic  #152                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+     123: invokevirtual #153                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.defaultValue:(Ljava/lang/Object;)Ljava/lang/Object;
+     126: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     129: invokevirtual #156                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/BoolSetting;
+     132: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+     135: putfield      #158                // Field pick:Lmeteordevelopment/meteorclient/settings/Setting;
+     138: aload_0
+     139: aload_0
+     140: getfield      #90                 // Field sgGeneral:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+     143: new           #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     146: dup
+     147: invokespecial #141                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder."<init>":()V
+     150: ldc           #159                // String rotate
+     152: invokevirtual #144                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+     155: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     158: ldc           #161                // String Faces the block being mined server side.
+     160: invokevirtual #147                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+     163: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     166: iconst_1
+     167: invokestatic  #152                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+     170: invokevirtual #153                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.defaultValue:(Ljava/lang/Object;)Ljava/lang/Object;
+     173: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     176: invokevirtual #156                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/BoolSetting;
+     179: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+     182: putfield      #163                // Field rotate:Lmeteordevelopment/meteorclient/settings/Setting;
+     185: aload_0
+     186: aload_0
+     187: getfield      #98                 // Field sgRender:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+     190: new           #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     193: dup
+     194: invokespecial #141                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder."<init>":()V
+     197: ldc           #164                // String render
+     199: invokevirtual #144                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+     202: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     205: ldc           #166                // String Renders an overlay on the block being broken.
+     207: invokevirtual #147                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+     210: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     213: iconst_1
+     214: invokestatic  #152                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+     217: invokevirtual #153                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.defaultValue:(Ljava/lang/Object;)Ljava/lang/Object;
+     220: checkcast     #12                 // class meteordevelopment/meteorclient/settings/BoolSetting$Builder
+     223: invokevirtual #156                // Method meteordevelopment/meteorclient/settings/BoolSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/BoolSetting;
+     226: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+     229: putfield      #168                // Field render:Lmeteordevelopment/meteorclient/settings/Setting;
+     232: aload_0
+     233: aload_0
+     234: getfield      #98                 // Field sgRender:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+     237: new           #16                 // class meteordevelopment/meteorclient/settings/EnumSetting$Builder
+     240: dup
+     241: invokespecial #169                // Method meteordevelopment/meteorclient/settings/EnumSetting$Builder."<init>":()V
+     244: ldc           #171                // String shape-mode
+     246: invokevirtual #172                // Method meteordevelopment/meteorclient/settings/EnumSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+     249: checkcast     #16                 // class meteordevelopment/meteorclient/settings/EnumSetting$Builder
+     252: ldc           #174                // String How the shapes are rendered.
+     254: invokevirtual #175                // Method meteordevelopment/meteorclient/settings/EnumSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+     257: checkcast     #16                 // class meteordevelopment/meteorclient/settings/EnumSetting$Builder
+     260: getstatic     #181                // Field meteordevelopment/meteorclient/renderer/ShapeMode.Both:Lmeteordevelopment/meteorclient/renderer/ShapeMode;
+     263: invokevirtual #182                // Method meteordevelopment/meteorclient/settings/EnumSetting$Builder.defaultValue:(Ljava/lang/Object;)Ljava/lang/Object;
+     266: checkcast     #16                 // class meteordevelopment/meteorclient/settings/EnumSetting$Builder
+     269: invokevirtual #185                // Method meteordevelopment/meteorclient/settings/EnumSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/EnumSetting;
+     272: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+     275: putfield      #187                // Field shapeMode:Lmeteordevelopment/meteorclient/settings/Setting;
+     278: aload_0
+     279: aload_0
+     280: getfield      #98                 // Field sgRender:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+     283: new           #20                 // class meteordevelopment/meteorclient/settings/ColorSetting$Builder
+     286: dup
+     287: invokespecial #188                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder."<init>":()V
+     290: ldc           #190                // String side-color
+     292: invokevirtual #191                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+     295: checkcast     #20                 // class meteordevelopment/meteorclient/settings/ColorSetting$Builder
+     298: ldc           #193                // String The color of the sides of the blocks being rendered.
+     300: invokevirtual #194                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+     303: checkcast     #20                 // class meteordevelopment/meteorclient/settings/ColorSetting$Builder
+     306: new           #196                // class meteordevelopment/meteorclient/utils/render/color/SettingColor
+     309: dup
+     310: sipush        204
+     313: iconst_0
+     314: iconst_0
+     315: bipush        10
+     317: invokespecial #199                // Method meteordevelopment/meteorclient/utils/render/color/SettingColor."<init>":(IIII)V
+     320: invokevirtual #202                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.defaultValue:(Lmeteordevelopment/meteorclient/utils/render/color/SettingColor;)Lmeteordevelopment/meteorclient/settings/ColorSetting$Builder;
+     323: invokevirtual #205                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/ColorSetting;
+     326: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+     329: putfield      #207                // Field sideColor:Lmeteordevelopment/meteorclient/settings/Setting;
+     332: aload_0
+     333: aload_0
+     334: getfield      #98                 // Field sgRender:Lmeteordevelopment/meteorclient/settings/SettingGroup;
+     337: new           #20                 // class meteordevelopment/meteorclient/settings/ColorSetting$Builder
+     340: dup
+     341: invokespecial #188                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder."<init>":()V
+     344: ldc           #209                // String line-color
+     346: invokevirtual #191                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.name:(Ljava/lang/String;)Ljava/lang/Object;
+     349: checkcast     #20                 // class meteordevelopment/meteorclient/settings/ColorSetting$Builder
+     352: ldc           #211                // String The color of the lines of the blocks being rendered.
+     354: invokevirtual #194                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.description:(Ljava/lang/String;)Ljava/lang/Object;
+     357: checkcast     #20                 // class meteordevelopment/meteorclient/settings/ColorSetting$Builder
+     360: new           #196                // class meteordevelopment/meteorclient/utils/render/color/SettingColor
+     363: dup
+     364: sipush        204
+     367: iconst_0
+     368: iconst_0
+     369: sipush        255
+     372: invokespecial #199                // Method meteordevelopment/meteorclient/utils/render/color/SettingColor."<init>":(IIII)V
+     375: invokevirtual #202                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.defaultValue:(Lmeteordevelopment/meteorclient/utils/render/color/SettingColor;)Lmeteordevelopment/meteorclient/settings/ColorSetting$Builder;
+     378: invokevirtual #205                // Method meteordevelopment/meteorclient/settings/ColorSetting$Builder.build:()Lmeteordevelopment/meteorclient/settings/ColorSetting;
+     381: invokevirtual #138                // Method meteordevelopment/meteorclient/settings/SettingGroup.add:(Lmeteordevelopment/meteorclient/settings/Setting;)Lmeteordevelopment/meteorclient/settings/Setting;
+     384: putfield      #213                // Field lineColor:Lmeteordevelopment/meteorclient/settings/Setting;
+     387: aload_0
+     388: new           #24                 // class net/minecraft/class_2338$class_2339
+     391: dup
+     392: iconst_0
+     393: ldc           #214                // int -2147483648
+     395: iconst_0
+     396: invokespecial #217                // Method net/minecraft/class_2338$class_2339."<init>":(III)V
+     399: putfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+     402: return
+
+  public void onActivate();
+    Code:
+       0: aload_0
+       1: iconst_0
+       2: putfield      #224                // Field ticks:I
+       5: aload_0
+       6: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+       9: iconst_0
+      10: iconst_m1
+      11: iconst_0
+      12: invokevirtual #228                // Method net/minecraft/class_2338$class_2339.method_10103:(III)Lnet/minecraft/class_2338$class_2339;
+      15: pop
+      16: return
+
+  private void onStartBreakingBlock(meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: getfield      #236                // Field meteordevelopment/meteorclient/events/entity/player/StartBreakingBlockEvent.direction:Lnet/minecraft/class_2350;
+       5: putfield      #237                // Field direction:Lnet/minecraft/class_2350;
+       8: aload_0
+       9: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      12: aload_1
+      13: getfield      #240                // Field meteordevelopment/meteorclient/events/entity/player/StartBreakingBlockEvent.blockPos:Lnet/minecraft/class_2338;
+      16: invokevirtual #244                // Method net/minecraft/class_2338$class_2339.method_10101:(Lnet/minecraft/class_2382;)Lnet/minecraft/class_2338$class_2339;
+      19: pop
+      20: return
+
+  private void onTick(meteordevelopment.meteorclient.events.world.TickEvent$Pre);
+    Code:
+       0: aload_0
+       1: getfield      #224                // Field ticks:I
+       4: aload_0
+       5: getfield      #140                // Field tickDelay:Lmeteordevelopment/meteorclient/settings/Setting;
+       8: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+      11: checkcast     #113                // class java/lang/Integer
+      14: invokevirtual #257                // Method java/lang/Integer.intValue:()I
+      17: if_icmplt     101
+      20: aload_0
+      21: iconst_0
+      22: putfield      #224                // Field ticks:I
+      25: aload_0
+      26: invokevirtual #261                // Method shouldMine:()Z
+      29: ifeq          111
+      32: aload_0
+      33: getfield      #163                // Field rotate:Lmeteordevelopment/meteorclient/settings/Setting;
+      36: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+      39: checkcast     #149                // class java/lang/Boolean
+      42: invokevirtual #264                // Method java/lang/Boolean.booleanValue:()Z
+      45: ifeq          74
+      48: aload_0
+      49: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      52: invokestatic  #270                // Method meteordevelopment/meteorclient/utils/player/Rotations.getYaw:(Lnet/minecraft/class_2338;)D
+      55: aload_0
+      56: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      59: invokestatic  #273                // Method meteordevelopment/meteorclient/utils/player/Rotations.getPitch:(Lnet/minecraft/class_2338;)D
+      62: aload_0
+      63: invokedynamic #289,  0            // InvokeDynamic #0:run:(Lmeteordevelopment/meteorclient/systems/modules/player/InstantRebreak;)Ljava/lang/Runnable;
+      68: invokestatic  #292                // Method meteordevelopment/meteorclient/utils/player/Rotations.rotate:(DDLjava/lang/Runnable;)V
+      71: goto          78
+      74: aload_0
+      75: invokevirtual #277                // Method sendPacket:()V
+      78: aload_0
+      79: getfield      #296                // Field mc:Lnet/minecraft/class_310;
+      82: invokevirtual #302                // Method net/minecraft/class_310.method_1562:()Lnet/minecraft/class_634;
+      85: new           #304                // class net/minecraft/class_2879
+      88: dup
+      89: getstatic     #310                // Field net/minecraft/class_1268.field_5808:Lnet/minecraft/class_1268;
+      92: invokespecial #313                // Method net/minecraft/class_2879."<init>":(Lnet/minecraft/class_1268;)V
+      95: invokevirtual #319                // Method net/minecraft/class_634.method_52787:(Lnet/minecraft/class_2596;)V
+      98: goto          111
+     101: aload_0
+     102: dup
+     103: getfield      #224                // Field ticks:I
+     106: iconst_1
+     107: iadd
+     108: putfield      #224                // Field ticks:I
+     111: return
+
+  public void sendPacket();
+    Code:
+       0: aload_0
+       1: getfield      #296                // Field mc:Lnet/minecraft/class_310;
+       4: getfield      #324                // Field net/minecraft/class_310.field_1761:Lnet/minecraft/class_636;
+       7: aload_0
+       8: getfield      #296                // Field mc:Lnet/minecraft/class_310;
+      11: getfield      #328                // Field net/minecraft/class_310.field_1687:Lnet/minecraft/class_638;
+      14: aload_0
+      15: invokedynamic #338,  0            // InvokeDynamic #1:predict:(Lmeteordevelopment/meteorclient/systems/modules/player/InstantRebreak;)Lnet/minecraft/class_7204;
+      20: invokevirtual #344                // Method net/minecraft/class_636.method_41931:(Lnet/minecraft/class_638;Lnet/minecraft/class_7204;)V
+      23: return
+
+  public boolean shouldMine();
+    Code:
+       0: aload_0
+       1: getfield      #296                // Field mc:Lnet/minecraft/class_310;
+       4: getfield      #328                // Field net/minecraft/class_310.field_1687:Lnet/minecraft/class_638;
+       7: aload_0
+       8: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      11: invokevirtual #350                // Method net/minecraft/class_638.method_31606:(Lnet/minecraft/class_2338;)Z
+      14: ifne          27
+      17: aload_0
+      18: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      21: invokestatic  #355                // Method meteordevelopment/meteorclient/utils/world/BlockUtils.canBreak:(Lnet/minecraft/class_2338;)Z
+      24: ifne          29
+      27: iconst_0
+      28: ireturn
+      29: aload_0
+      30: getfield      #158                // Field pick:Lmeteordevelopment/meteorclient/settings/Setting;
+      33: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+      36: checkcast     #149                // class java/lang/Boolean
+      39: invokevirtual #264                // Method java/lang/Boolean.booleanValue:()Z
+      42: ifeq          64
+      45: aload_0
+      46: getfield      #296                // Field mc:Lnet/minecraft/class_310;
+      49: getfield      #359                // Field net/minecraft/class_310.field_1724:Lnet/minecraft/class_746;
+      52: invokevirtual #365                // Method net/minecraft/class_746.method_6047:()Lnet/minecraft/class_1799;
+      55: getstatic     #371                // Field net/minecraft/class_3489.field_42614:Lnet/minecraft/class_6862;
+      58: invokevirtual #377                // Method net/minecraft/class_1799.method_31573:(Lnet/minecraft/class_6862;)Z
+      61: ifeq          68
+      64: iconst_1
+      65: goto          69
+      68: iconst_0
+      69: ireturn
+
+  private void onRender(meteordevelopment.meteorclient.events.render.Render3DEvent);
+    Code:
+       0: aload_0
+       1: getfield      #168                // Field render:Lmeteordevelopment/meteorclient/settings/Setting;
+       4: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+       7: checkcast     #149                // class java/lang/Boolean
+      10: invokevirtual #264                // Method java/lang/Boolean.booleanValue:()Z
+      13: ifeq          23
+      16: aload_0
+      17: invokevirtual #261                // Method shouldMine:()Z
+      20: ifne          24
+      23: return
+      24: aload_1
+      25: getfield      #385                // Field meteordevelopment/meteorclient/events/render/Render3DEvent.renderer:Lmeteordevelopment/meteorclient/renderer/Renderer3D;
+      28: aload_0
+      29: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      32: aload_0
+      33: getfield      #207                // Field sideColor:Lmeteordevelopment/meteorclient/settings/Setting;
+      36: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+      39: checkcast     #387                // class meteordevelopment/meteorclient/utils/render/color/Color
+      42: aload_0
+      43: getfield      #213                // Field lineColor:Lmeteordevelopment/meteorclient/settings/Setting;
+      46: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+      49: checkcast     #387                // class meteordevelopment/meteorclient/utils/render/color/Color
+      52: aload_0
+      53: getfield      #187                // Field shapeMode:Lmeteordevelopment/meteorclient/settings/Setting;
+      56: invokevirtual #253                // Method meteordevelopment/meteorclient/settings/Setting.get:()Ljava/lang/Object;
+      59: checkcast     #177                // class meteordevelopment/meteorclient/renderer/ShapeMode
+      62: iconst_0
+      63: invokevirtual #393                // Method meteordevelopment/meteorclient/renderer/Renderer3D.box:(Lnet/minecraft/class_2338;Lmeteordevelopment/meteorclient/utils/render/color/Color;Lmeteordevelopment/meteorclient/utils/render/color/Color;Lmeteordevelopment/meteorclient/renderer/ShapeMode;I)V
+      66: return
+
+  private net.minecraft.class_2596 lambda$sendPacket$0(int);
+    Code:
+       0: new           #31                 // class net/minecraft/class_2846
+       3: dup
+       4: getstatic     #399                // Field net/minecraft/class_2846$class_2847.field_12973:Lnet/minecraft/class_2846$class_2847;
+       7: aload_0
+       8: getfield      #219                // Field blockPos:Lnet/minecraft/class_2338$class_2339;
+      11: aload_0
+      12: getfield      #237                // Field direction:Lnet/minecraft/class_2350;
+      15: ifnonnull     24
+      18: getstatic     #404                // Field net/minecraft/class_2350.field_11036:Lnet/minecraft/class_2350;
+      21: goto          28
+      24: aload_0
+      25: getfield      #237                // Field direction:Lnet/minecraft/class_2350;
+      28: iload_1
+      29: invokespecial #407                // Method net/minecraft/class_2846."<init>":(Lnet/minecraft/class_2846$class_2847;Lnet/minecraft/class_2338;Lnet/minecraft/class_2350;I)V
+      32: areturn
+}
