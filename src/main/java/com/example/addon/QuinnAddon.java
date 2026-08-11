@@ -20,13 +20,14 @@ public class QuinnAddon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-        Modules.get().add(new AutoMine());
+       // its gone now Modules.get().add(new AutoMine());
         Modules.get().add(new AutoWeb());
         Modules.get().add(new AntiPhase());
         Modules.get().add(new BedrockNuker());
         Modules.get().add(new LiquidFiller());
         Modules.get().add(new Speed());
         Modules.get().add(new BurrowEChest());
+        Modules.get().add(new LogStripper());
 
 
 
