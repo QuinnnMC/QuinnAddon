@@ -1,11 +1,11 @@
 {
 "schemaVersion": 1,
 "id": "addon-template",
-"version": "${version}",
-"name": "QuinnAddon",
-"description": "A addon For Ultility and Pvp Related Features Designed for 6b6t",
+"version": "0.1.0",
+"name": "Addon Template",
+"description": "An addon template for Meteor Client addons.",
 "authors": [
-"Quinnnn_n"
+"seasnail"
 ],
 "contact": {
 "sources": "https://github.com/MeteorDevelopment/meteor-addon-template"
@@ -31,7 +31,7 @@
 "depends": {
 "java": ">=21",
 "minecraft": [
-"${mc_version}"
+"1.21.11"
 ],
 "meteor-client": "*"
 }

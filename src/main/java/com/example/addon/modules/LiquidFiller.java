@@ -122,22 +122,24 @@ public class LiquidFiller extends Module {
     // Filter
     // =========================
 
-    private final Setting<Boolean> whitelistMode = sgFilter.add(
-        new BoolSetting.Builder()
-            .name("whitelist")
-            .description("When enabled, only blocks in the list can be replaced. When disabled, listed blocks are excluded.")
-            .defaultValue(false)
+    private final Setting<FilterMode> filterMode = sgFilter.add(
+        new EnumSetting.Builder<FilterMode>()
+            .name("filter-mode")
+            .description("Choose whether the configured blocks are whitelisted or blacklisted.")
+            .defaultValue(FilterMode.Whitelist)
             .build()
     );
 
     private final Setting<List<Block>> blocks = sgFilter.add(
         new BlockListSetting.Builder()
             .name("blocks")
-            .description("Blocks used by the whitelist/blacklist.")
+            .description("Blocks used by the whitelist or blacklist.")
             .defaultValue(
-                Blocks.AIR,
-                Blocks.CAVE_AIR,
-                Blocks.VOID_AIR
+                Blocks.NETHERRACK,
+                Blocks.GRASS_BLOCK,
+                Blocks.STONE,
+                Blocks.COBBLESTONE,
+                Blocks.SPONGE
             )
             .build()
     );
@@ -226,17 +228,12 @@ public class LiquidFiller extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.world == null) {
+            return;
+        }
 
         updateRenderPositions();
 
-        /*
-         * Pause placement while the player is actively
-         * consuming an item.
-         *
-         * 1.21.11 uses item components instead of
-         * Item.isFood().
-         */
         if (pauseWhileEating.get() && isEatingOrDrinking()) {
             return;
         }
@@ -248,20 +245,32 @@ public class LiquidFiller extends Module {
 
         tickCounter = 0;
 
+        /*
+         * Find a block that is allowed by the
+         * whitelist/blacklist.
+         */
         FindItemResult blockItem = findPlaceableBlock();
 
-        if (!blockItem.found()) return;
+        if (!blockItem.found()) {
+            return;
+        }
 
         List<BlockPos> targets = findTargets();
 
-        if (targets.isEmpty()) return;
+        if (targets.isEmpty()) {
+            return;
+        }
 
         int placed = 0;
 
         for (BlockPos pos : targets) {
-            if (placed >= blocksPerTick.get()) break;
+            if (placed >= blocksPerTick.get()) {
+                break;
+            }
 
-            if (!isValidTarget(pos)) continue;
+            if (!isValidTarget(pos)) {
+                continue;
+            }
 
             if (BlockUtils.place(
                 pos,
@@ -299,12 +308,6 @@ public class LiquidFiller extends Module {
             return false;
         }
 
-        /*
-         * FOOD covers normal food items.
-         *
-         * CONSUMABLE also catches items that use the
-         * newer consumable component, including drinks.
-         */
         return stack.get(DataComponentTypes.FOOD) != null
             || stack.get(DataComponentTypes.CONSUMABLE) != null;
     }
@@ -317,6 +320,9 @@ public class LiquidFiller extends Module {
         return InvUtils.findInHotbar(stack ->
             !stack.isEmpty()
                 && stack.getItem() instanceof BlockItem
+                && isAllowedByBlockFilter(
+                    ((BlockItem) stack.getItem()).getBlock()
+                )
         );
     }
 
@@ -336,7 +342,9 @@ public class LiquidFiller extends Module {
                 for (int z = -radius; z <= radius; z++) {
                     BlockPos pos = playerPos.add(x, y, z);
 
-                    if (!isValidTarget(pos)) continue;
+                    if (!isValidTarget(pos)) {
+                        continue;
+                    }
 
                     if (!PlayerUtils.isWithin(
                         pos.toCenterPos(),
@@ -360,21 +368,34 @@ public class LiquidFiller extends Module {
     // =========================
 
     private boolean isValidTarget(BlockPos pos) {
-        if (mc.world == null) return false;
+        if (mc.world == null) {
+            return false;
+        }
 
         BlockState state = mc.world.getBlockState(pos);
 
-        if (!isLiquid(state)) return false;
+        if (!isLiquid(state)) {
+            return false;
+        }
 
-        if (!isCorrectLiquid(state)) return false;
+        if (!isCorrectLiquid(state)) {
+            return false;
+        }
 
         if (sourceOnly.get() && !isSourceLiquid(state)) {
             return false;
         }
 
-        if (!isAllowedByBlockFilter(state.getBlock())) {
-            return false;
-        }
+        /*
+         * IMPORTANT:
+         *
+         * The whitelist/blacklist is NOT checked here.
+         * This block is the liquid being replaced, not
+         * the block that we are placing.
+         *
+         * The filter is checked in findPlaceableBlock()
+         * against the actual BlockItem being placed.
+         */
 
         if (!state.isReplaceable()) {
             return false;
@@ -414,11 +435,17 @@ public class LiquidFiller extends Module {
     private boolean isAllowedByBlockFilter(Block block) {
         boolean contains = blocks.get().contains(block);
 
-        if (whitelistMode.get()) {
-            return contains;
-        }
+        return switch (filterMode.get()) {
+            /*
+             * Only blocks in the list can be used.
+             */
+            case Whitelist -> contains;
 
-        return !contains;
+            /*
+             * Blocks in the list cannot be used.
+             */
+            case Blacklist -> !contains;
+        };
     }
 
     // =========================
@@ -455,10 +482,6 @@ public class LiquidFiller extends Module {
     }
 
     private double distanceToPlayer(BlockPos pos) {
-        /*
-         * Yarn 1.21.11 uses squaredDistanceTo().
-         * This avoids calculating a square root for sorting.
-         */
         return mc.player.getEyePos().squaredDistanceTo(
             pos.toCenterPos()
         );
@@ -470,9 +493,13 @@ public class LiquidFiller extends Module {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
-        if (!render.get()) return;
+        if (!render.get()) {
+            return;
+        }
 
-        if (placedBlocks.isEmpty()) return;
+        if (placedBlocks.isEmpty()) {
+            return;
+        }
 
         for (PlacedBlock placed : placedBlocks) {
             event.renderer.box(
@@ -486,7 +513,9 @@ public class LiquidFiller extends Module {
     }
 
     private void updateRenderPositions() {
-        if (placedBlocks.isEmpty()) return;
+        if (placedBlocks.isEmpty()) {
+            return;
+        }
 
         for (int i = placedBlocks.size() - 1; i >= 0; i--) {
             PlacedBlock placed = placedBlocks.get(i);
@@ -528,5 +557,10 @@ public class LiquidFiller extends Module {
         Furthest,
         TopDown,
         BottomUp
+    }
+
+    public enum FilterMode {
+        Whitelist,
+        Blacklist
     }
 }
