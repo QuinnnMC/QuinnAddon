@@ -7,7 +7,7 @@ import com.example.addon.modules.BedrockNuker;
 import com.example.addon.modules.LiquidFiller;
 import com.example.addon.modules.Speed;
 import com.example.addon.modules.BurrowEChest;
-
+import com.example.addon.modules.LogStripper;
 
 
 
@@ -27,6 +27,7 @@ public class QuinnAddon extends MeteorAddon {
         Modules.get().add(new LiquidFiller());
         Modules.get().add(new Speed());
         Modules.get().add(new BurrowEChest());
+        Modules.get().add(new LogStripper());
 
 
 
