@@ -12,7 +12,7 @@ Added some needed features
 -rendering  
 
 ### Bedrock Nuker  
--Mines bedrock around the player with a configurable range (currently only works while in a gui for some reason)
+-Mines bedrock around the player with a configurable range 
 
 ### AutoWeb  
 -added some needed features such as pause while eating
@@ -20,5 +20,14 @@ Added some needed features
 ### AntiPhase  
 Places blocks at people's feet to prevent them from phasing into a block
 
-### AutoMine
-An attempt to move Blackout's Automine to a different addon but does not work well right now
+### AutoTotem+
+An AutoTotem but with the ability to throw xp bottles from your offhand to mend
+
+### Death Sounds
+Plays a configurable sound upon a player dying in your render distance
+
+### Log Stripper
+Automatically places strips and breaks a log all in one module
+
+### Surround
+A recoded version of surround that adds a few extra settings
