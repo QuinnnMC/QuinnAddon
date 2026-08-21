@@ -4,7 +4,7 @@ plugins {
 
 base {
     archivesName = "QuinnAddon"
-    version = "0.2.0"
+    version = "0.2.3"
     group = properties["maven_group"] as String
 }
 

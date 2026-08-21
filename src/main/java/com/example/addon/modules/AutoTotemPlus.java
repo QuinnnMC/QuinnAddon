@@ -3,6 +3,8 @@ package com.example.addon.modules;
 import com.example.addon.QuinnAddon;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.KeybindSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -13,59 +15,98 @@ import meteordevelopment.orbit.EventHandler;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 
 public class AutoTotemPlus extends Module {
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+    private final SettingGroup sgGeneral =
+        settings.getDefaultGroup();
 
     // ============================================================
     // SETTINGS
     // ============================================================
 
-    private final Setting<Keybind> xpKeybind = sgGeneral.add(
-        new KeybindSetting.Builder()
-            .name("xp-keybind")
-            .description("Hold this key to throw XP bottles. Does nothing while a GUI is open.")
-            .defaultValue(Keybind.none())
-            .build()
-    );
+    private final Setting<Keybind> xpKeybind =
+        sgGeneral.add(
+            new KeybindSetting.Builder()
+                .name("xp-keybind")
+                .description(
+                    "Hold this key to throw XP bottles. Does nothing while a GUI is open."
+                )
+                .defaultValue(Keybind.none())
+                .build()
+        );
 
-    private final Setting<Integer> xpDelay = sgGeneral.add(
-        new IntSetting.Builder()
-            .name("xp-delay")
-            .description("Ticks between XP bottle throws.")
-            .defaultValue(2)
-            .min(0)
-            .max(20)
-            .sliderMin(0)
-            .sliderMax(20)
-            .build()
-    );
+    private final Setting<Integer> xpDelay =
+        sgGeneral.add(
+            new IntSetting.Builder()
+                .name("xp-delay")
+                .description("Ticks between XP bottle throws.")
+                .defaultValue(2)
+                .min(0)
+                .max(20)
+                .sliderMin(0)
+                .sliderMax(20)
+                .build()
+        );
 
-    private final Setting<Integer> totemDelay = sgGeneral.add(
-        new IntSetting.Builder()
-            .name("totem-delay")
-            .description("Ticks to wait before putting a Totem in the offhand.")
-            .defaultValue(0)
-            .min(0)
-            .max(5)
-            .sliderMin(0)
-            .sliderMax(5)
-            .build()
-    );
+    private final Setting<Integer> totemDelay =
+        sgGeneral.add(
+            new IntSetting.Builder()
+                .name("totem-delay")
+                .description(
+                    "Ticks to wait before putting a Totem in the offhand."
+                )
+                .defaultValue(0)
+                .min(0)
+                .max(5)
+                .sliderMin(0)
+                .sliderMax(5)
+                .build()
+        );
 
-    private final Setting<Integer> minHealth = sgGeneral.add(
-        new IntSetting.Builder()
-            .name("minimum-health")
-            .description("Do not swap the Totem out for XP when health is at or below this value. 0 disables the health check.")
-            .defaultValue(10)
-            .min(0)
-            .max(36)
-            .sliderMin(0)
-            .sliderMax(36)
-            .build()
-    );
+    private final Setting<Integer> minHealth =
+        sgGeneral.add(
+            new IntSetting.Builder()
+                .name("minimum-health")
+                .description(
+                    "Health threshold for protecting the offhand item. At or below this health, the module uses a Totem instead of a Shield or enchanted golden apple. 0 disables the health check."
+                )
+                .defaultValue(10)
+                .min(0)
+                .max(36)
+                .sliderMin(0)
+                .sliderMax(36)
+                .build()
+        );
+
+    private final Setting<Boolean> shieldMode =
+        sgGeneral.add(
+            new BoolSetting.Builder()
+                .name("shield-mode")
+                .description(
+                    "Uses a Shield in the offhand by default and switches to a Totem when health reaches the minimum-health threshold."
+                )
+                .defaultValue(false)
+                .build()
+        );
+
+    // ============================================================
+    // RIGHT-CLICK APPLE MODE
+    // ============================================================
+
+    private final Setting<RightClickMode> rightClickMode =
+        sgGeneral.add(
+            new EnumSetting.Builder<RightClickMode>()
+                .name("right-click-apple")
+                .description(
+                    "Controls when an enchanted golden apple is moved to the offhand while right-clicking."
+                )
+                .defaultValue(RightClickMode.NONE)
+                .build()
+        );
 
     // ============================================================
     // STATE
@@ -78,23 +119,66 @@ public class AutoTotemPlus extends Module {
     private boolean waitingForTotem;
 
     /*
-     * Exact main-inventory slot where the XP came from.
+     * PlayerInventory indexes:
      *
-     * 9-35 = main inventory.
+     * 0-8  = hotbar
+     * 9-35 = main inventory
      */
     private int xpInventorySlot = -1;
 
-    /*
-     * Prevents repeated XP swap packets before the previous
-     * inventory update has been processed.
-     */
     private boolean xpSwapPending;
 
-    /*
-     * Totem swap state.
-     */
+    // ============================================================
+    // TOTEM STATE
+    // ============================================================
+
     private boolean totemSwapPending;
     private int totemInventorySlot = -1;
+
+    // ============================================================
+    // SHIELD STATE
+    // ============================================================
+
+    /*
+     * Original PlayerInventory index where the Shield came from.
+     *
+     * 0-8  = hotbar
+     * 9-35 = main inventory
+     */
+    private int shieldInventorySlot = -1;
+
+    /*
+     * True after a Shield has been successfully moved
+     * into the offhand.
+     */
+    private boolean shieldSwapActive;
+
+    /*
+     * A Shield swap has been sent but the inventory update
+     * has not been confirmed yet.
+     */
+    private boolean shieldSwapPending;
+
+    // ============================================================
+    // ENCHANTED GOLDEN APPLE STATE
+    // ============================================================
+
+    /*
+     * Original PlayerInventory index where the apple came from.
+     */
+    private int appleInventorySlot = -1;
+
+    /*
+     * True only after the apple has actually been confirmed
+     * in the offhand.
+     */
+    private boolean appleSwapActive;
+
+    /*
+     * A swap packet has been sent but the inventory update has
+     * not been confirmed yet.
+     */
+    private boolean appleSwapPending;
 
     // ============================================================
     // CONSTRUCTOR
@@ -104,7 +188,7 @@ public class AutoTotemPlus extends Module {
         super(
             QuinnAddon.CATEGORY,
             "autototem+",
-            "Automatically keeps a Totem in the offhand and throws XP while holding the XP keybind. Credits to H_ux, Discord h.u.x."
+            "Automatically manages the offhand with Totems, Shields, XP, and enchanted golden apples."
         );
     }
 
@@ -125,6 +209,14 @@ public class AutoTotemPlus extends Module {
 
         totemSwapPending = false;
         totemInventorySlot = -1;
+
+        shieldInventorySlot = -1;
+        shieldSwapActive = false;
+        shieldSwapPending = false;
+
+        appleInventorySlot = -1;
+        appleSwapActive = false;
+        appleSwapPending = false;
     }
 
     // ============================================================
@@ -133,16 +225,43 @@ public class AutoTotemPlus extends Module {
 
     @Override
     public void onDeactivate() {
+
+        /*
+         * Return the apple to its original location if possible.
+         */
+        if (
+            mc.player != null
+                && mc.interactionManager != null
+                && appleInventorySlot >= 0
+                && appleInventorySlot <= 35
+                && isEnchantedGoldenApple(
+                    mc.player.getOffHandStack()
+                )
+        ) {
+            swapSlotWithOffhand(
+                appleInventorySlot
+            );
+        }
+
         xpTimer = 0;
         totemTimer = 0;
 
         wasThrowingXp = false;
         waitingForTotem = false;
 
+        xpInventorySlot = -1;
         xpSwapPending = false;
 
         totemSwapPending = false;
         totemInventorySlot = -1;
+
+        shieldInventorySlot = -1;
+        shieldSwapActive = false;
+        shieldSwapPending = false;
+
+        appleInventorySlot = -1;
+        appleSwapActive = false;
+        appleSwapPending = false;
     }
 
     // ============================================================
@@ -151,6 +270,7 @@ public class AutoTotemPlus extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+
         if (
             mc.player == null
                 || mc.world == null
@@ -159,52 +279,55 @@ public class AutoTotemPlus extends Module {
             return;
         }
 
-        /*
-         * ========================================================
-         * XP SYSTEM
-         * ========================================================
-         *
-         * IMPORTANT:
-         *
-         * The XP keybind is completely ignored while a GUI is
-         * open.
-         *
-         * This means:
-         *
-         * - No XP swap
-         * - No XP throwing
-         * - No XP return
-         * - No XP inventory changes
-         *
-         * while a GUI is open.
-         *
-         * The Totem system below can still operate normally.
-         */
-        if (mc.currentScreen == null) {
-            boolean throwingXp = xpKeybind.get().isPressed();
+        boolean guiOpen =
+            mc.currentScreen != null;
 
-            // ====================================================
-            // XP KEY HELD
-            // ====================================================
+        // ========================================================
+        // RIGHT-CLICK APPLE
+        // ========================================================
+
+        if (!guiOpen) {
+            handleRightClickApple();
+        } else {
+
+            /*
+             * Don't leave the apple in the offhand if a GUI opens.
+             */
+            if (appleSwapActive) {
+                returnAppleToInventory();
+            }
+        }
+
+        // ========================================================
+        // XP SYSTEM
+        // ========================================================
+
+        if (!guiOpen) {
+
+            boolean throwingXp =
+                xpKeybind.get().isPressed();
 
             if (throwingXp) {
-                handleXpMode();
+
+                /*
+                 * Don't interfere with an active enchanted apple.
+                 */
+                if (!appleSwapActive) {
+                    handleXpMode();
+                }
 
                 wasThrowingXp = true;
-            }
 
-            // ====================================================
-            // XP KEY RELEASED
-            // ====================================================
+            } else {
 
-            else {
                 /*
-                 * If XP is still in the offhand, return it to the
-                 * exact inventory slot it originally came from.
+                 * Return XP to its original slot.
                  */
                 if (
                     xpInventorySlot != -1
-                        && isXp(mc.player.getOffHandStack())
+                        && isXp(
+                            mc.player.getOffHandStack()
+                        )
                 ) {
                     returnXpToInventory();
                 }
@@ -213,17 +336,252 @@ public class AutoTotemPlus extends Module {
             }
         }
 
+        // ========================================================
+        // SHIELD / TOTEM SYSTEM
+        // ========================================================
+
         /*
-         * ========================================================
-         * TOTEM SYSTEM
-         * ========================================================
-         *
-         * Totem mode is intentionally outside the GUI check.
-         * This allows AutoTotemPlus to continue protecting the
-         * player even while a GUI is open.
+         * Don't replace an enchanted golden apple or XP.
          */
-        if (mc.currentScreen == null || !wasThrowingXp) {
-            handleTotemMode();
+        if (
+            !appleSwapActive
+                && (guiOpen || !wasThrowingXp)
+        ) {
+
+            if (shieldMode.get()) {
+                handleShieldMode();
+            } else {
+                handleTotemMode();
+            }
+        }
+    }
+
+    // ============================================================
+    // RIGHT-CLICK APPLE
+    // ============================================================
+
+    private void handleRightClickApple() {
+
+        if (
+            mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // NONE
+        // --------------------------------------------------------
+
+        if (
+            rightClickMode.get()
+                == RightClickMode.NONE
+        ) {
+
+            if (appleSwapActive) {
+                returnAppleToInventory();
+            }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // RIGHT CLICK
+        // --------------------------------------------------------
+
+        boolean rightClicking =
+            mc.options.useKey.isPressed();
+
+        if (!rightClicking) {
+
+            if (appleSwapActive) {
+                returnAppleToInventory();
+            }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // CHECK MODE
+        // --------------------------------------------------------
+
+        if (!isRightClickAppleAllowed()) {
+
+            if (appleSwapActive) {
+                returnAppleToInventory();
+            }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // HEALTH CHECK
+        // --------------------------------------------------------
+
+        /*
+         * Don't remove the Totem / Shield or equip the apple
+         * when health is at or below the configured threshold.
+         */
+        if (
+            !isEnchantedGoldenApple(
+                mc.player.getOffHandStack()
+            )
+                && shouldProtectTotem()
+        ) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // APPLE ALREADY IN OFFHAND
+        // --------------------------------------------------------
+
+        if (
+            isEnchantedGoldenApple(
+                mc.player.getOffHandStack()
+            )
+        ) {
+            appleSwapPending = false;
+            appleSwapActive = true;
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // WAIT FOR PREVIOUS SWAP
+        // --------------------------------------------------------
+
+        if (appleSwapPending) {
+
+            if (
+                isEnchantedGoldenApple(
+                    mc.player.getOffHandStack()
+                )
+            ) {
+                appleSwapPending = false;
+                appleSwapActive = true;
+            }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // FIND APPLE
+        // --------------------------------------------------------
+
+        if (appleInventorySlot == -1) {
+            appleInventorySlot =
+                findEnchantedGoldenApple();
+        }
+
+        if (appleInventorySlot == -1) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // VERIFY ORIGINAL SLOT
+        // --------------------------------------------------------
+
+        if (
+            !isEnchantedGoldenApple(
+                getInventoryStack(
+                    appleInventorySlot
+                )
+            )
+        ) {
+
+            appleInventorySlot =
+                findEnchantedGoldenApple();
+
+            if (appleInventorySlot == -1) {
+                return;
+            }
+        }
+
+        // --------------------------------------------------------
+        // SWAP APPLE
+        // --------------------------------------------------------
+
+        if (
+            swapSlotWithOffhand(
+                appleInventorySlot
+            )
+        ) {
+            appleSwapPending = true;
+        }
+    }
+
+    // ============================================================
+    // RIGHT-CLICK MODE CHECK
+    // ============================================================
+
+    private boolean isRightClickAppleAllowed() {
+
+        if (mc.player == null) {
+            return false;
+        }
+
+        switch (rightClickMode.get()) {
+
+            case NONE:
+                return false;
+
+            case ALL:
+                return true;
+
+            case SWORD:
+
+                ItemStack mainHand =
+                    mc.player.getMainHandStack();
+
+                return !mainHand.isEmpty()
+                    && mainHand.isIn(
+                        ItemTags.SWORDS
+                    );
+        }
+
+        return false;
+    }
+
+    // ============================================================
+    // RETURN APPLE
+    // ============================================================
+
+    private void returnAppleToInventory() {
+
+        if (
+            mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        if (
+            !isEnchantedGoldenApple(
+                mc.player.getOffHandStack()
+            )
+        ) {
+            appleInventorySlot = -1;
+            appleSwapActive = false;
+            appleSwapPending = false;
+
+            return;
+        }
+
+        if (
+            appleInventorySlot < 0
+                || appleInventorySlot > 35
+        ) {
+            return;
+        }
+
+        if (
+            swapSlotWithOffhand(
+                appleInventorySlot
+            )
+        ) {
+            appleInventorySlot = -1;
+            appleSwapActive = false;
+            appleSwapPending = false;
         }
     }
 
@@ -232,25 +590,30 @@ public class AutoTotemPlus extends Module {
     // ============================================================
 
     private void handleXpMode() {
+
         /*
-         * ========================================================
-         * HEALTH CHECK
-         * ========================================================
-         *
-         * If the player's health is at or below the configured
-         * threshold, DO NOT move the Totem out of the offhand.
+         * Don't take the Totem or Shield away at or below
+         * the health threshold.
          */
         if (
-            !isXp(mc.player.getOffHandStack())
+            !isXp(
+                mc.player.getOffHandStack()
+            )
                 && shouldProtectTotem()
         ) {
             return;
         }
 
-        /*
-         * XP is already in the offhand.
-         */
-        if (isXp(mc.player.getOffHandStack())) {
+        // --------------------------------------------------------
+        // XP ALREADY IN OFFHAND
+        // --------------------------------------------------------
+
+        if (
+            isXp(
+                mc.player.getOffHandStack()
+            )
+        ) {
+
             xpSwapPending = false;
 
             throwOffhand();
@@ -258,12 +621,17 @@ public class AutoTotemPlus extends Module {
             return;
         }
 
-        /*
-         * If a swap was just sent, check whether the XP has
-         * reached the offhand.
-         */
+        // --------------------------------------------------------
+        // WAIT FOR SWAP
+        // --------------------------------------------------------
+
         if (xpSwapPending) {
-            if (isXp(mc.player.getOffHandStack())) {
+
+            if (
+                isXp(
+                    mc.player.getOffHandStack()
+                )
+            ) {
                 xpSwapPending = false;
                 return;
             }
@@ -271,39 +639,50 @@ public class AutoTotemPlus extends Module {
             xpSwapPending = false;
         }
 
-        /*
-         * Find XP if we don't already have a remembered slot.
-         */
+        // --------------------------------------------------------
+        // FIND XP
+        // --------------------------------------------------------
+
         if (xpInventorySlot == -1) {
-            xpInventorySlot = findXpInMainInventory();
+            xpInventorySlot =
+                findXpInInventory();
         }
 
         if (xpInventorySlot == -1) {
             return;
         }
 
-        /*
-         * Make sure the remembered slot still contains XP.
-         */
-        if (!isXp(
-            mc.player.getInventory()
-                .getStack(xpInventorySlot)
-        )) {
-            xpInventorySlot = findXpInMainInventory();
+        // --------------------------------------------------------
+        // VERIFY SLOT
+        // --------------------------------------------------------
+
+        if (
+            !isXp(
+                getInventoryStack(
+                    xpInventorySlot
+                )
+            )
+        ) {
+
+            xpInventorySlot =
+                findXpInInventory();
 
             if (xpInventorySlot == -1) {
                 return;
             }
         }
 
-        /*
-         * Direct inventory slot <-> offhand swap.
-         *
-         * SWAP button 40 = offhand.
-         */
-        swapSlotWithOffhand(xpInventorySlot);
+        // --------------------------------------------------------
+        // SWAP
+        // --------------------------------------------------------
 
-        xpSwapPending = true;
+        if (
+            swapSlotWithOffhand(
+                xpInventorySlot
+            )
+        ) {
+            xpSwapPending = true;
+        }
     }
 
     // ============================================================
@@ -311,26 +690,21 @@ public class AutoTotemPlus extends Module {
     // ============================================================
 
     private boolean shouldProtectTotem() {
+
         if (mc.player == null) {
             return true;
         }
 
-        int threshold = minHealth.get();
+        int threshold =
+            minHealth.get();
 
         /*
-         * 0 means health protection is disabled.
+         * 0 = health protection disabled.
          */
         if (threshold <= 0) {
             return false;
         }
 
-        /*
-         * Minecraft health:
-         *
-         * 20.0 = 10 hearts
-         * 10.0 = 5 hearts
-         * 4.0  = 2 hearts
-         */
         return mc.player.getHealth() <= threshold;
     }
 
@@ -339,6 +713,7 @@ public class AutoTotemPlus extends Module {
     // ============================================================
 
     private void returnXpToInventory() {
+
         if (
             mc.player == null
                 || mc.interactionManager == null
@@ -346,35 +721,184 @@ public class AutoTotemPlus extends Module {
             return;
         }
 
-        /*
-         * If XP isn't in the offhand, there is nothing to return.
-         */
-        if (!isXp(mc.player.getOffHandStack())) {
+        if (
+            !isXp(
+                mc.player.getOffHandStack()
+            )
+        ) {
             xpInventorySlot = -1;
             xpSwapPending = false;
+
             return;
         }
 
-        /*
-         * We must know the original slot.
-         */
         if (
-            xpInventorySlot < 9
+            xpInventorySlot < 0
                 || xpInventorySlot > 35
         ) {
             return;
         }
 
-        /*
-         * Directly swap:
-         *
-         * OFFHAND XP
-         *      ↕
-         * ORIGINAL XP SLOT
-         */
-        swapSlotWithOffhand(xpInventorySlot);
+        if (
+            swapSlotWithOffhand(
+                xpInventorySlot
+            )
+        ) {
+            xpInventorySlot = -1;
+            xpSwapPending = false;
+        }
+    }
 
-        xpSwapPending = false;
+    // ============================================================
+    // SHIELD MODE
+    // ============================================================
+
+    private void handleShieldMode() {
+
+        if (
+            mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // APPLE
+        // --------------------------------------------------------
+
+        if (
+            isEnchantedGoldenApple(
+                mc.player.getOffHandStack()
+            )
+        ) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // XP
+        // --------------------------------------------------------
+
+        if (
+            isXp(
+                mc.player.getOffHandStack()
+            )
+        ) {
+            return;
+        }
+
+        /*
+         * At or below minimum-health:
+         *
+         * Shield -> Totem
+         */
+        if (shouldProtectTotem()) {
+            handleTotemMode();
+            return;
+        }
+
+        /*
+         * Above minimum-health:
+         *
+         * Totem -> Shield
+         */
+        handleShieldNormal();
+    }
+
+    // ============================================================
+    // NORMAL SHIELD
+    // ============================================================
+
+    private void handleShieldNormal() {
+
+        if (
+            mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // SHIELD ALREADY EQUIPPED
+        // --------------------------------------------------------
+
+        if (
+            isShield(
+                mc.player.getOffHandStack()
+            )
+        ) {
+
+            shieldSwapPending = false;
+            shieldSwapActive = true;
+
+            shieldInventorySlot = -1;
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // WAIT FOR PREVIOUS SWAP
+        // --------------------------------------------------------
+
+        if (shieldSwapPending) {
+
+            if (
+                isShield(
+                    mc.player.getOffHandStack()
+                )
+            ) {
+                shieldSwapPending = false;
+                shieldSwapActive = true;
+                shieldInventorySlot = -1;
+            }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // FIND SHIELD
+        // --------------------------------------------------------
+
+        if (shieldInventorySlot == -1) {
+            shieldInventorySlot =
+                findShieldInInventory();
+        }
+
+        if (shieldInventorySlot == -1) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // VERIFY SLOT
+        // --------------------------------------------------------
+
+        if (
+            !isShield(
+                getInventoryStack(
+                    shieldInventorySlot
+                )
+            )
+        ) {
+
+            shieldInventorySlot =
+                findShieldInInventory();
+
+            if (shieldInventorySlot == -1) {
+                return;
+            }
+        }
+
+        // --------------------------------------------------------
+        // SWAP SHIELD
+        // --------------------------------------------------------
+
+        if (
+            swapSlotWithOffhand(
+                shieldInventorySlot
+            )
+        ) {
+            shieldSwapPending = true;
+            shieldSwapActive = false;
+        }
     }
 
     // ============================================================
@@ -382,6 +906,7 @@ public class AutoTotemPlus extends Module {
     // ============================================================
 
     private void handleTotemMode() {
+
         if (
             mc.player == null
                 || mc.interactionManager == null
@@ -389,30 +914,67 @@ public class AutoTotemPlus extends Module {
             return;
         }
 
-        /*
-         * Never replace XP with a Totem.
-         */
-        if (isXp(mc.player.getOffHandStack())) {
+        // --------------------------------------------------------
+        // DON'T REPLACE APPLE
+        // --------------------------------------------------------
+
+        if (
+            isEnchantedGoldenApple(
+                mc.player.getOffHandStack()
+            )
+        ) {
             return;
         }
 
-        /*
-         * Totem already equipped.
-         */
-        if (isTotem(mc.player.getOffHandStack())) {
+        // --------------------------------------------------------
+        // DON'T REPLACE XP
+        // --------------------------------------------------------
+
+        if (
+            isXp(
+                mc.player.getOffHandStack()
+            )
+        ) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // TOTEM ALREADY EQUIPPED
+        // --------------------------------------------------------
+
+        if (
+            isTotem(
+                mc.player.getOffHandStack()
+            )
+        ) {
+
             waitingForTotem = false;
             totemTimer = 0;
+
+            totemSwapPending = false;
+            totemInventorySlot = -1;
+
+            shieldSwapPending = false;
+            shieldSwapActive = false;
+            shieldInventorySlot = -1;
 
             xpInventorySlot = -1;
 
             return;
         }
 
-        /*
-         * Check whether a previous Totem swap succeeded.
-         */
+        // --------------------------------------------------------
+        // CHECK PREVIOUS SWAP
+        // --------------------------------------------------------
+
         if (totemSwapPending) {
-            if (isTotem(mc.player.getOffHandStack())) {
+
+            if (
+                isTotem(
+                    mc.player.getOffHandStack()
+                )
+            ) {
+
                 totemSwapPending = false;
                 totemInventorySlot = -1;
 
@@ -424,15 +986,13 @@ public class AutoTotemPlus extends Module {
                 return;
             }
 
-            /*
-             * Previous transaction didn't complete.
-             */
             totemSwapPending = false;
         }
 
-        /*
-         * Start the configurable Totem delay.
-         */
+        // --------------------------------------------------------
+        // START DELAY
+        // --------------------------------------------------------
+
         if (!waitingForTotem) {
             waitingForTotem = true;
             totemTimer = totemDelay.get();
@@ -440,76 +1000,101 @@ public class AutoTotemPlus extends Module {
 
         if (totemTimer > 0) {
             totemTimer--;
+
             return;
         }
 
-        /*
-         * Find Totem ONLY in main inventory.
-         */
-        totemInventorySlot = findTotemInMainInventory();
+        // --------------------------------------------------------
+        // FIND TOTEM
+        // --------------------------------------------------------
+
+        totemInventorySlot =
+            findTotemInInventory();
 
         if (totemInventorySlot == -1) {
-            /*
-             * No Totem available.
-             *
-             * Keep checking.
-             */
+
             waitingForTotem = true;
-            totemTimer = Math.max(1, totemDelay.get());
+
+            totemTimer =
+                Math.max(
+                    1,
+                    totemDelay.get()
+                );
 
             return;
         }
 
-        /*
-         * Direct main-inventory <-> offhand swap.
-         */
-        swapSlotWithOffhand(totemInventorySlot);
+        // --------------------------------------------------------
+        // SWAP
+        // --------------------------------------------------------
 
-        totemSwapPending = true;
+        if (
+            swapSlotWithOffhand(
+                totemInventorySlot
+            )
+        ) {
+            totemSwapPending = true;
+        }
     }
 
     // ============================================================
-    // DIRECT OFFHAND SWAP
+    // SWAP INVENTORY SLOT <-> OFFHAND
     // ============================================================
 
-    private void swapSlotWithOffhand(int inventorySlot) {
+    private boolean swapSlotWithOffhand(
+        int inventorySlot
+    ) {
+
         if (
             mc.player == null
                 || mc.interactionManager == null
         ) {
-            return;
+            return false;
+        }
+
+        if (
+            inventorySlot < 0
+                || inventorySlot > 35
+        ) {
+            return false;
         }
 
         /*
-         * Only main inventory slots are used.
+         * PlayerInventory:
          *
-         * 9-35 = main inventory.
+         * 0-8  = hotbar
+         * 9-35 = main inventory
+         *
+         * ScreenHandler:
+         *
+         * 36-44 = hotbar
+         * 9-35  = main inventory
          */
-        if (
-            inventorySlot < 9
-                || inventorySlot > 35
-        ) {
-            return;
+        int handlerSlot;
+
+        if (inventorySlot <= 8) {
+            handlerSlot =
+                36 + inventorySlot;
+        } else {
+            handlerSlot =
+                inventorySlot;
         }
 
         int syncId =
             mc.player.currentScreenHandler.syncId;
 
         /*
-         * SlotActionType.SWAP
-         *
          * Button 40 = offhand.
-         *
-         * This directly exchanges the selected inventory
-         * slot with the offhand without touching the cursor.
          */
         mc.interactionManager.clickSlot(
             syncId,
-            inventorySlot,
+            handlerSlot,
             40,
             SlotActionType.SWAP,
             mc.player
         );
+
+        return true;
     }
 
     // ============================================================
@@ -517,6 +1102,7 @@ public class AutoTotemPlus extends Module {
     // ============================================================
 
     private void throwOffhand() {
+
         if (
             mc.player == null
                 || mc.interactionManager == null
@@ -524,21 +1110,21 @@ public class AutoTotemPlus extends Module {
             return;
         }
 
-        /*
-         * Extra safety check:
-         *
-         * Never throw XP while a GUI is open.
-         */
         if (mc.currentScreen != null) {
             return;
         }
 
-        if (!isXp(mc.player.getOffHandStack())) {
+        if (
+            !isXp(
+                mc.player.getOffHandStack()
+            )
+        ) {
             return;
         }
 
         if (xpTimer > 0) {
             xpTimer--;
+
             return;
         }
 
@@ -547,26 +1133,38 @@ public class AutoTotemPlus extends Module {
             Hand.OFF_HAND
         );
 
-        mc.player.swingHand(Hand.OFF_HAND);
+        mc.player.swingHand(
+            Hand.OFF_HAND
+        );
 
-        xpTimer = xpDelay.get();
+        xpTimer =
+            xpDelay.get();
     }
 
     // ============================================================
     // FIND XP
     // ============================================================
 
-    private int findXpInMainInventory() {
+    private int findXpInInventory() {
+
         if (mc.player == null) {
             return -1;
         }
 
-        /*
-         * Main inventory only.
-         *
-         * 9-35.
-         */
+        for (int i = 0; i <= 8; i++) {
+
+            if (
+                isXp(
+                    mc.player.getInventory()
+                        .getStack(i)
+                )
+            ) {
+                return i;
+            }
+        }
+
         for (int i = 9; i <= 35; i++) {
+
             if (
                 isXp(
                     mc.player.getInventory()
@@ -584,17 +1182,26 @@ public class AutoTotemPlus extends Module {
     // FIND TOTEM
     // ============================================================
 
-    private int findTotemInMainInventory() {
+    private int findTotemInInventory() {
+
         if (mc.player == null) {
             return -1;
         }
 
-        /*
-         * Main inventory only.
-         *
-         * 9-35.
-         */
+        for (int i = 0; i <= 8; i++) {
+
+            if (
+                isTotem(
+                    mc.player.getInventory()
+                        .getStack(i)
+                )
+            ) {
+                return i;
+            }
+        }
+
         for (int i = 9; i <= 35; i++) {
+
             if (
                 isTotem(
                     mc.player.getInventory()
@@ -609,18 +1216,160 @@ public class AutoTotemPlus extends Module {
     }
 
     // ============================================================
+    // FIND SHIELD
+    // ============================================================
+
+    private int findShieldInInventory() {
+
+        if (mc.player == null) {
+            return -1;
+        }
+
+        for (int i = 0; i <= 8; i++) {
+
+            if (
+                isShield(
+                    mc.player.getInventory()
+                        .getStack(i)
+                )
+            ) {
+                return i;
+            }
+        }
+
+        for (int i = 9; i <= 35; i++) {
+
+            if (
+                isShield(
+                    mc.player.getInventory()
+                        .getStack(i)
+                )
+            ) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    // ============================================================
+    // FIND ENCHANTED GOLDEN APPLE
+    // ============================================================
+
+    private int findEnchantedGoldenApple() {
+
+        if (mc.player == null) {
+            return -1;
+        }
+
+        for (int i = 0; i <= 8; i++) {
+
+            if (
+                isEnchantedGoldenApple(
+                    mc.player.getInventory()
+                        .getStack(i)
+                )
+            ) {
+                return i;
+            }
+        }
+
+        for (int i = 9; i <= 35; i++) {
+
+            if (
+                isEnchantedGoldenApple(
+                    mc.player.getInventory()
+                        .getStack(i)
+                )
+            ) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    // ============================================================
+    // GET INVENTORY STACK
+    // ============================================================
+
+    private ItemStack getInventoryStack(
+        int slot
+    ) {
+
+        if (mc.player == null) {
+            return ItemStack.EMPTY;
+        }
+
+        if (
+            slot < 0
+                || slot > 35
+        ) {
+            return ItemStack.EMPTY;
+        }
+
+        return mc.player.getInventory()
+            .getStack(slot);
+    }
+
+    // ============================================================
     // ITEM CHECKS
     // ============================================================
 
-    private boolean isXp(ItemStack stack) {
+    private boolean isXp(
+        ItemStack stack
+    ) {
+
         return stack != null
             && !stack.isEmpty()
-            && stack.isOf(Items.EXPERIENCE_BOTTLE);
+            && stack.isOf(
+                Items.EXPERIENCE_BOTTLE
+            );
     }
 
-    private boolean isTotem(ItemStack stack) {
+    private boolean isTotem(
+        ItemStack stack
+    ) {
+
         return stack != null
             && !stack.isEmpty()
-            && stack.isOf(Items.TOTEM_OF_UNDYING);
+            && stack.isOf(
+                Items.TOTEM_OF_UNDYING
+            );
+    }
+
+    private boolean isShield(
+        ItemStack stack
+    ) {
+
+        return stack != null
+            && !stack.isEmpty()
+            && stack.isOf(
+                Items.SHIELD
+            );
+    }
+
+    private boolean isEnchantedGoldenApple(
+        ItemStack stack
+    ) {
+
+        return stack != null
+            && !stack.isEmpty()
+            && stack.isOf(
+                Items.ENCHANTED_GOLDEN_APPLE
+            );
+    }
+
+    // ============================================================
+    // RIGHT-CLICK MODES
+    // ============================================================
+
+    public enum RightClickMode {
+
+        NONE,
+
+        SWORD,
+
+        ALL
     }
 }

@@ -28,132 +28,162 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class BedrockNuker extends Module {
 
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgRender = settings.createGroup("Render");
+    private final SettingGroup sgGeneral =
+        settings.getDefaultGroup();
+
+    private final SettingGroup sgRender =
+        settings.createGroup("Render");
 
     // ============================================================
     // GENERAL SETTINGS
     // ============================================================
 
-    private final Setting<Double> range = sgGeneral.add(
-        new DoubleSetting.Builder()
-            .name("range")
-            .description("Maximum distance to target bedrock.")
-            .defaultValue(6.0)
-            .min(1.0)
-            .max(6.0)
-            .sliderMin(1.0)
-            .sliderMax(6.0)
-            .build()
-    );
+    private final Setting<Double> range =
+        sgGeneral.add(
+            new DoubleSetting.Builder()
+                .name("range")
+                .description(
+                    "Maximum distance to target bedrock."
+                )
+                .defaultValue(6.0)
+                .min(1.0)
+                .max(6.0)
+                .sliderMin(1.0)
+                .sliderMax(6.0)
+                .build()
+        );
 
-    private final Setting<SortMode> sortMode = sgGeneral.add(
-        new EnumSetting.Builder<SortMode>()
-            .name("sort-mode")
-            .description("Determines which bedrock block is targeted.")
-            .defaultValue(SortMode.Closest)
-            .build()
-    );
+    private final Setting<SortMode> sortMode =
+        sgGeneral.add(
+            new EnumSetting.Builder<SortMode>()
+                .name("sort-mode")
+                .description(
+                    "Determines which bedrock block is targeted."
+                )
+                .defaultValue(SortMode.Closest)
+                .build()
+        );
 
-    private final Setting<MiningMode> miningMode = sgGeneral.add(
-        new EnumSetting.Builder<MiningMode>()
-            .name("mining-mode")
-            .description("Determines which bedrock blocks can be targeted.")
-            .defaultValue(MiningMode.All)
-            .build()
-    );
+    private final Setting<MiningMode> miningMode =
+        sgGeneral.add(
+            new EnumSetting.Builder<MiningMode>()
+                .name("mining-mode")
+                .description(
+                    "Determines which bedrock blocks can be targeted."
+                )
+                .defaultValue(MiningMode.All)
+                .build()
+        );
 
-    private final Setting<Boolean> pauseWhileEat = sgGeneral.add(
-        new BoolSetting.Builder()
-            .name("pause-while-eat")
-            .description(
-                "Pauses bedrock mining while using an enchanted golden apple."
-            )
-            .defaultValue(true)
-            .build()
-    );
+    private final Setting<Boolean> pauseWhileEat =
+        sgGeneral.add(
+            new BoolSetting.Builder()
+                .name("pause-while-eat")
+                .description(
+                    "Pauses bedrock mining while using an enchanted golden apple."
+                )
+                .defaultValue(true)
+                .build()
+        );
 
-    private final Setting<Boolean> resetOnRangeExit = sgGeneral.add(
-        new BoolSetting.Builder()
-            .name("reset-on-range-exit")
-            .description(
-                "Resets the current mining target when it moves out of range."
-            )
-            .defaultValue(true)
-            .build()
-    );
-
-    private final Setting<Boolean> rotate = sgGeneral.add(
-        new BoolSetting.Builder()
-            .name("rotate")
-            .description("Rotate toward the bedrock being mined.")
-            .defaultValue(false)
-            .build()
-    );
+    private final Setting<Boolean> resetOnRangeExit =
+        sgGeneral.add(
+            new BoolSetting.Builder()
+                .name("reset-on-range-exit")
+                .description(
+                    "Resets the current mining target when it moves out of range."
+                )
+                .defaultValue(true)
+                .build()
+        );
 
     // ============================================================
     // RENDER SETTINGS
     // ============================================================
 
-    private final Setting<Boolean> render = sgRender.add(
-        new BoolSetting.Builder()
-            .name("render")
-            .description("Render the block currently being mined.")
-            .defaultValue(true)
-            .build()
-    );
-
-    private final Setting<Integer> renderGrowTicks = sgRender.add(
-        new IntSetting.Builder()
-            .name("render-grow-ticks")
-            .description(
-                "Ticks required for the render box to grow to full size."
-            )
-            .defaultValue(20)
-            .min(1)
-            .max(20)
-            .sliderMin(1)
-            .sliderMax(20)
-            .build()
-    );
-
-    private final Setting<ShapeMode> shapeMode = sgRender.add(
-        new EnumSetting.Builder<ShapeMode>()
-            .name("shape-mode")
-            .description("How the target block is rendered.")
-            .defaultValue(ShapeMode.Both)
-            .build()
-    );
-
-    private final Setting<SettingColor> sideColor = sgRender.add(
-        new ColorSetting.Builder()
-            .name("side-color")
-            .description("Color of the target block's sides.")
-            .defaultValue(
-                new SettingColor(
-                    255,
-                    255,
-                    255,
-                    40
+    private final Setting<Boolean> render =
+        sgRender.add(
+            new BoolSetting.Builder()
+                .name("render")
+                .description(
+                    "Render the block currently being mined."
                 )
-            )
-            .build()
-    );
+                .defaultValue(true)
+                .build()
+        );
 
-    private final Setting<SettingColor> lineColor = sgRender.add(
-        new ColorSetting.Builder()
-            .name("line-color")
-            .description("Color of the target block's outline.")
-            .defaultValue(
-                new SettingColor(
-                    255,
-                    255,
-                    255,
-                    255
+    private final Setting<Boolean> highlightBedrock =
+        sgRender.add(
+            new BoolSetting.Builder()
+                .name("highlight-bedrock")
+                .description(
+                    "Highlights all bedrock that can be mined within the configured range."
                 )
-            )
-            .build()
-    );
+                .defaultValue(false)
+                .build()
+        );
+
+    private final Setting<Integer> renderGrowTicks =
+        sgRender.add(
+            new IntSetting.Builder()
+                .name("render-grow-ticks")
+                .description(
+                    "Ticks required for the render box to grow to full size."
+                )
+                .defaultValue(20)
+                .min(1)
+                .max(20)
+                .sliderMin(1)
+                .sliderMax(20)
+                .build()
+        );
+
+    private final Setting<ShapeMode> shapeMode =
+        sgRender.add(
+            new EnumSetting.Builder<ShapeMode>()
+                .name("shape-mode")
+                .description(
+                    "How blocks are rendered."
+                )
+                .defaultValue(ShapeMode.Both)
+                .build()
+        );
+
+    private final Setting<SettingColor> sideColor =
+        sgRender.add(
+            new ColorSetting.Builder()
+                .name("side-color")
+                .description(
+                    "Color of rendered block sides."
+                )
+                .defaultValue(
+                    new SettingColor(
+                        255,
+                        255,
+                        255,
+                        40
+                    )
+                )
+                .build()
+        );
+
+    private final Setting<SettingColor> lineColor =
+        sgRender.add(
+            new ColorSetting.Builder()
+                .name("line-color")
+                .description(
+                    "Color of rendered block outlines."
+                )
+                .defaultValue(
+                    new SettingColor(
+                        255,
+                        255,
+                        255,
+                        255
+                    )
+                )
+                .build()
+        );
 
     // ============================================================
     // STATE
@@ -203,7 +233,11 @@ public class BedrockNuker extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null) {
+
+        if (
+            mc.player == null ||
+            mc.world == null
+        ) {
             stopMining();
             return;
         }
@@ -212,9 +246,10 @@ public class BedrockNuker extends Module {
         // PAUSE WHILE USING ENCHANTED GOLDEN APPLE
         // --------------------------------------------------------
 
-        if (pauseWhileEat.get()
-            && isUsingEnchantedGoldenApple()) {
-
+        if (
+            pauseWhileEat.get() &&
+            isUsingEnchantedGoldenApple()
+        ) {
             return;
         }
 
@@ -241,8 +276,8 @@ public class BedrockNuker extends Module {
 
             // Never target bottom-most world layer.
             else if (
-                miningPos.getY()
-                    <= mc.world.getBottomY()
+                miningPos.getY() <=
+                    mc.world.getBottomY()
             ) {
                 stopMining();
             }
@@ -253,7 +288,9 @@ public class BedrockNuker extends Module {
         // --------------------------------------------------------
 
         if (miningPos == null) {
-            BlockPos target = findBedrock();
+
+            BlockPos target =
+                findBedrock();
 
             if (target == null) {
                 return;
@@ -276,15 +313,18 @@ public class BedrockNuker extends Module {
     // ============================================================
 
     private void startMining(BlockPos pos) {
+
         if (mc.interactionManager == null) {
             return;
         }
 
-        miningPos = pos.toImmutable();
+        miningPos =
+            pos.toImmutable();
 
-        // Reset render when a new target is selected.
         renderTicks = 0;
-        lastRenderPos = miningPos.toImmutable();
+
+        lastRenderPos =
+            miningPos.toImmutable();
 
         mc.interactionManager.attackBlock(
             miningPos,
@@ -297,11 +337,12 @@ public class BedrockNuker extends Module {
     // ============================================================
 
     private void mineBlock() {
+
         if (
-            mc.player == null
-            || mc.world == null
-            || mc.interactionManager == null
-            || miningPos == null
+            mc.player == null ||
+            mc.world == null ||
+            mc.interactionManager == null ||
+            miningPos == null
         ) {
             stopMining();
             return;
@@ -313,52 +354,47 @@ public class BedrockNuker extends Module {
         }
 
         if (
-            miningPos.getY()
-                <= mc.world.getBottomY()
+            miningPos.getY() <=
+                mc.world.getBottomY()
         ) {
             stopMining();
             return;
         }
 
-        // Range check before every mining action.
         if (!inRange(miningPos)) {
             stopMining();
             return;
         }
 
-        /*
-         * Continue normal Minecraft block breaking.
-         */
-        mc.interactionManager.updateBlockBreakingProgress(
-            miningPos,
-            Direction.UP
-        );
+        mc.interactionManager
+            .updateBlockBreakingProgress(
+                miningPos,
+                Direction.UP
+            );
 
-        /*
-         * Send swing packet to the server.
-         */
         mc.player.networkHandler.sendPacket(
             new HandSwingC2SPacket(
                 Hand.MAIN_HAND
             )
         );
 
-        /*
-         * Advance render animation.
-         */
-        if (renderTicks < renderGrowTicks.get()) {
+        if (
+            renderTicks <
+                renderGrowTicks.get()
+        ) {
             renderTicks++;
         }
     }
 
     // ============================================================
-    // FIND BEDROCK
+    // FIND BEDROCK TO MINE
     // ============================================================
 
     private BlockPos findBedrock() {
+
         if (
-            mc.player == null
-            || mc.world == null
+            mc.player == null ||
+            mc.world == null
         ) {
             return null;
         }
@@ -367,20 +403,38 @@ public class BedrockNuker extends Module {
             mc.player.getBlockPos();
 
         int radius =
-            (int) Math.ceil(range.get());
+            (int) Math.ceil(
+                range.get()
+            );
 
         double maxDistance =
-            range.get() * range.get();
+            range.get() *
+            range.get();
 
         BlockPos best = null;
 
         double bestDistance = 0.0;
 
-        int bestY = Integer.MIN_VALUE;
+        int bestY =
+            Integer.MIN_VALUE;
 
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -radius; y <= radius; y++) {
-                for (int z = -radius; z <= radius; z++) {
+        for (
+            int x = -radius;
+            x <= radius;
+            x++
+        ) {
+
+            for (
+                int y = -radius;
+                y <= radius;
+                y++
+            ) {
+
+                for (
+                    int z = -radius;
+                    z <= radius;
+                    z++
+                ) {
 
                     BlockPos pos =
                         playerPos.add(
@@ -402,8 +456,8 @@ public class BedrockNuker extends Module {
                     // ------------------------------------------------
 
                     if (
-                        pos.getY()
-                            <= mc.world.getBottomY()
+                        pos.getY() <=
+                            mc.world.getBottomY()
                     ) {
                         continue;
                     }
@@ -413,10 +467,10 @@ public class BedrockNuker extends Module {
                     // ------------------------------------------------
 
                     if (
-                        miningMode.get()
-                            == MiningMode.Flatten
-                        && pos.getY()
-                            < mc.player.getBlockY()
+                        miningMode.get() ==
+                            MiningMode.Flatten &&
+                        pos.getY() <
+                            mc.player.getBlockY()
                     ) {
                         continue;
                     }
@@ -432,7 +486,10 @@ public class BedrockNuker extends Module {
                             pos.getZ() + 0.5
                         );
 
-                    if (distance > maxDistance) {
+                    if (
+                        distance >
+                            maxDistance
+                    ) {
                         continue;
                     }
 
@@ -441,13 +498,14 @@ public class BedrockNuker extends Module {
                     // ------------------------------------------------
 
                     if (
-                        sortMode.get()
-                            == SortMode.Closest
+                        sortMode.get() ==
+                            SortMode.Closest
                     ) {
 
                         if (
-                            best == null
-                            || distance < bestDistance
+                            best == null ||
+                            distance <
+                                bestDistance
                         ) {
 
                             best =
@@ -463,13 +521,14 @@ public class BedrockNuker extends Module {
                     // ------------------------------------------------
 
                     else if (
-                        sortMode.get()
-                            == SortMode.Furthest
+                        sortMode.get() ==
+                            SortMode.Furthest
                     ) {
 
                         if (
-                            best == null
-                            || distance > bestDistance
+                            best == null ||
+                            distance >
+                                bestDistance
                         ) {
 
                             best =
@@ -485,21 +544,19 @@ public class BedrockNuker extends Module {
                     // ------------------------------------------------
 
                     else if (
-                        sortMode.get()
-                            == SortMode.TopDown
+                        sortMode.get() ==
+                            SortMode.TopDown
                     ) {
 
-                        /*
-                         * Highest Y has priority.
-                         *
-                         * Same Y = closest wins.
-                         */
                         if (
-                            best == null
-                            || pos.getY() > bestY
-                            || (
-                                pos.getY() == bestY
-                                && distance < bestDistance
+                            best == null ||
+                            pos.getY() >
+                                bestY ||
+                            (
+                                pos.getY() ==
+                                    bestY &&
+                                distance <
+                                    bestDistance
                             )
                         ) {
 
@@ -521,10 +578,140 @@ public class BedrockNuker extends Module {
     }
 
     // ============================================================
+    // FIND ALL HIGHLIGHTABLE BEDROCK
+    // ============================================================
+
+    private void renderHighlightableBedrock(
+        Render3DEvent event
+    ) {
+
+        if (
+            mc.player == null ||
+            mc.world == null
+        ) {
+            return;
+        }
+
+        BlockPos playerPos =
+            mc.player.getBlockPos();
+
+        int radius =
+            (int) Math.ceil(
+                range.get()
+            );
+
+        double maxDistance =
+            range.get() *
+            range.get();
+
+        for (
+            int x = -radius;
+            x <= radius;
+            x++
+        ) {
+
+            for (
+                int y = -radius;
+                y <= radius;
+                y++
+            ) {
+
+                for (
+                    int z = -radius;
+                    z <= radius;
+                    z++
+                ) {
+
+                    BlockPos pos =
+                        playerPos.add(
+                            x,
+                            y,
+                            z
+                        );
+
+                    // ------------------------------------------------
+                    // BEDROCK ONLY
+                    // ------------------------------------------------
+
+                    if (!isBedrock(pos)) {
+                        continue;
+                    }
+
+                    // ------------------------------------------------
+                    // NEVER HIGHLIGHT BOTTOM LAYER
+                    // ------------------------------------------------
+
+                    if (
+                        pos.getY() <=
+                            mc.world.getBottomY()
+                    ) {
+                        continue;
+                    }
+
+                    // ------------------------------------------------
+                    // FLATTEN MODE
+                    // ------------------------------------------------
+
+                    if (
+                        miningMode.get() ==
+                            MiningMode.Flatten &&
+                        pos.getY() <
+                            mc.player.getBlockY()
+                    ) {
+                        continue;
+                    }
+
+                    // ------------------------------------------------
+                    // RANGE
+                    // ------------------------------------------------
+
+                    double distance =
+                        mc.player.squaredDistanceTo(
+                            pos.getX() + 0.5,
+                            pos.getY() + 0.5,
+                            pos.getZ() + 0.5
+                        );
+
+                    if (
+                        distance >
+                            maxDistance
+                    ) {
+                        continue;
+                    }
+
+                    // ------------------------------------------------
+                    // DON'T DRAW NORMAL TARGET TWICE
+                    // ------------------------------------------------
+
+                    if (
+                        miningPos != null &&
+                        miningPos.equals(pos)
+                    ) {
+                        continue;
+                    }
+
+                    // ------------------------------------------------
+                    // DRAW HIGHLIGHT
+                    // ------------------------------------------------
+
+                    event.renderer.box(
+                        pos,
+                        sideColor.get(),
+                        lineColor.get(),
+                        shapeMode.get(),
+                        0
+                    );
+                }
+            }
+        }
+    }
+
+    // ============================================================
     // ENCHANTED GOLDEN APPLE CHECK
     // ============================================================
 
     private boolean isUsingEnchantedGoldenApple() {
+
         if (mc.player == null) {
             return false;
         }
@@ -533,9 +720,11 @@ public class BedrockNuker extends Module {
             return false;
         }
 
-        return mc.player.getActiveItem().isOf(
-            Items.ENCHANTED_GOLDEN_APPLE
-        );
+        return mc.player
+            .getActiveItem()
+            .isOf(
+                Items.ENCHANTED_GOLDEN_APPLE
+            );
     }
 
     // ============================================================
@@ -543,6 +732,7 @@ public class BedrockNuker extends Module {
     // ============================================================
 
     private boolean isBedrock(BlockPos pos) {
+
         if (mc.world == null) {
             return false;
         }
@@ -560,12 +750,14 @@ public class BedrockNuker extends Module {
     // ============================================================
 
     private boolean inRange(BlockPos pos) {
+
         if (mc.player == null) {
             return false;
         }
 
         double maxDistance =
-            range.get() * range.get();
+            range.get() *
+            range.get();
 
         double distance =
             mc.player.squaredDistanceTo(
@@ -574,7 +766,8 @@ public class BedrockNuker extends Module {
                 pos.getZ() + 0.5
             );
 
-        return distance <= maxDistance;
+        return distance <=
+            maxDistance;
     }
 
     // ============================================================
@@ -583,14 +776,17 @@ public class BedrockNuker extends Module {
 
     private void stopMining() {
 
-        if (mc.interactionManager != null) {
-            mc.interactionManager.cancelBlockBreaking();
+        if (
+            mc.interactionManager != null
+        ) {
+            mc.interactionManager
+                .cancelBlockBreaking();
         }
 
         miningPos = null;
 
-        // Reset render completely.
         renderTicks = 0;
+
         lastRenderPos = null;
     }
 
@@ -599,15 +795,33 @@ public class BedrockNuker extends Module {
     // ============================================================
 
     @EventHandler
-    private void onRender(Render3DEvent event) {
+    private void onRender(
+        Render3DEvent event
+    ) {
+
+        if (mc.world == null) {
+            return;
+        }
+
+        // --------------------------------------------------------
+        // HIGHLIGHT ALL POSSIBLE BEDROCK
+        // --------------------------------------------------------
+
+        if (highlightBedrock.get()) {
+            renderHighlightableBedrock(
+                event
+            );
+        }
+
+        // --------------------------------------------------------
+        // NORMAL CURRENT-TARGET RENDER
+        // --------------------------------------------------------
+
         if (!render.get()) {
             return;
         }
 
-        if (
-            mc.world == null
-            || miningPos == null
-        ) {
+        if (miningPos == null) {
             return;
         }
 
@@ -616,8 +830,8 @@ public class BedrockNuker extends Module {
         }
 
         if (
-            miningPos.getY()
-                <= mc.world.getBottomY()
+            miningPos.getY() <=
+                mc.world.getBottomY()
         ) {
             return;
         }
@@ -627,8 +841,10 @@ public class BedrockNuker extends Module {
         // --------------------------------------------------------
 
         if (
-            lastRenderPos == null
-            || !lastRenderPos.equals(miningPos)
+            lastRenderPos == null ||
+            !lastRenderPos.equals(
+                miningPos
+            )
         ) {
 
             lastRenderPos =
@@ -642,8 +858,8 @@ public class BedrockNuker extends Module {
         // --------------------------------------------------------
 
         double progress =
-            (double) renderTicks
-                / renderGrowTicks.get();
+            (double) renderTicks /
+            renderGrowTicks.get();
 
         progress =
             Math.max(
@@ -657,9 +873,9 @@ public class BedrockNuker extends Module {
         double minSize = 0.05;
 
         double size =
-            minSize
-                + (1.0 - minSize)
-                * progress;
+            minSize +
+            (1.0 - minSize) *
+            progress;
 
         // --------------------------------------------------------
         // CENTER

@@ -1,20 +1,21 @@
 package com.example.addon;
 
 import com.example.addon.modules.AntiPhase;
-import com.example.addon.modules.LogStripper;
-import com.example.addon.modules.AutoWeb;
-import com.example.addon.modules.BedrockNuker;
-import com.example.addon.modules.LiquidFiller;
-import com.example.addon.modules.Speed;
-import com.example.addon.modules.Surround;
-import com.example.addon.modules.DeathSounds;
 import com.example.addon.modules.AutoTotemPlus;
+import com.example.addon.modules.AutoWebPlus;
+import com.example.addon.modules.BedrockNuker;
+import com.example.addon.modules.DeathSounds;
+import com.example.addon.modules.FastWeb;
+import com.example.addon.modules.LiquidFiller;
+import com.example.addon.modules.LogStripper;
 import com.example.addon.modules.MassInstaMine;
+import com.example.addon.modules.Speed;
+import com.example.addon.modules.SurroundPlus;
+import com.example.addon.modules.BetterTabPlus;
 
 
 
-
-
+import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -24,21 +25,23 @@ public class QuinnAddon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-        Modules.get().add(new LogStripper());
-        Modules.get().add(new AutoWeb());
-        Modules.get().add(new AntiPhase());
-        Modules.get().add(new BedrockNuker());
-        Modules.get().add(new LiquidFiller());
-        Modules.get().add(new Speed());
-        Modules.get().add(new Surround());
-        Modules.get().add(new DeathSounds());
-        Modules.get().add(new AutoTotemPlus());
-        Modules.get().add(new MassInstaMine());
+        Modules modules = Modules.get();
 
+        modules.add(new AntiPhase());
+        modules.add(new AutoTotemPlus());
+        modules.add(new AutoWebPlus());
+        modules.add(new BedrockNuker());
+        modules.add(new DeathSounds());
+        modules.add(new FastWeb());
+        modules.add(new LiquidFiller());
+        modules.add(new LogStripper());
+        modules.add(new MassInstaMine());
+        modules.add(new Speed());
+        modules.add(new SurroundPlus());
+        modules.add(new BetterTabPlus());
 
 
     }
-
 
     @Override
     public void onRegisterCategories() {
@@ -48,5 +51,10 @@ public class QuinnAddon extends MeteorAddon {
     @Override
     public String getPackage() {
         return "com.example.addon";
+    }
+
+    @Override
+    public GithubRepo getRepo() {
+        return new GithubRepo("quinn", "QuinnAddon");
     }
 }

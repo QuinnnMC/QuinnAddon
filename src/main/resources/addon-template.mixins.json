@@ -3,7 +3,7 @@
   "package": "com.example.addon.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "BlockEntityRenderManagerMixin"
+    "BetterTabPlusMixin"
   ],
   "injectors": {
     "defaultRequire": 1

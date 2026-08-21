@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
@@ -78,6 +79,15 @@ public class AntiPhase extends Module {
                 .name("rotate")
                 .description("Rotate towards the block when placing.")
                 .defaultValue(true)
+                .build()
+        );
+
+    private final Setting<Boolean> doubles =
+        sgGeneral.add(
+            new BoolSetting.Builder()
+                .name("doubles")
+                .description("Attempts to place blocks at the target's feet and head.")
+                .defaultValue(false)
                 .build()
         );
 
@@ -193,35 +203,55 @@ public class AntiPhase extends Module {
                 continue;
             }
 
-            Block blockAtPos =
-                mc.world
-                    .getBlockState(targetPos)
-                    .getBlock();
-
-            if (materials.get().contains(blockAtPos)) {
-                continue;
-            }
-
-            if (!mc.world
-                .getBlockState(targetPos)
-                .isReplaceable()) {
-
-                continue;
-            }
-
-            boolean success =
-                BlockUtils.place(
-                    targetPos,
-                    blockItem,
-                    rotate.get() ? 50 : 0,
-                    false
-                );
-
-            if (success) {
+            /*
+             * Place the first AntiPhase block at the target's feet.
+             */
+            if (tryPlace(targetPos, blockItem)) {
                 placed++;
                 lastPlaceTime = System.currentTimeMillis();
             }
+
+            /*
+             * If doubles is enabled, also try to place a block
+             * at the target's head/face position.
+             */
+            if (doubles.get() && placed < bpt.get()) {
+                BlockPos facePos = targetPos.up();
+
+                if (tryPlace(facePos, blockItem)) {
+                    placed++;
+                    lastPlaceTime = System.currentTimeMillis();
+                }
+            }
         }
+    }
+
+    private boolean tryPlace(
+        BlockPos pos,
+        FindItemResult blockItem
+    ) {
+        Block blockAtPos =
+            mc.world
+                .getBlockState(pos)
+                .getBlock();
+
+        if (materials.get().contains(blockAtPos)) {
+            return false;
+        }
+
+        if (!mc.world
+            .getBlockState(pos)
+            .isReplaceable()) {
+
+            return false;
+        }
+
+        return BlockUtils.place(
+            pos,
+            blockItem,
+            rotate.get() ? 50 : 0,
+            false
+        );
     }
 
     private List<PlayerEntity> findTargets() {
