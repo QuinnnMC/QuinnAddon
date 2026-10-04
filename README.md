@@ -29,9 +29,6 @@ Plays a configurable sound upon a player dying in your render distance
 ### Log Stripper
 Automatically places strips and breaks a log all in one module
 
-### Surround+
-A recoded version of surround that adds a few extra settings
-
 ### Mass Insta Mine  
 abuses the packet limit to mine 50+ blocks a second in 1 tick  
 
